@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import Navbar from "./components/Navbar.jsx";
-import { Toaster ,toast } from "react-hot-toast";
+import "./custom.css";
+import { Toaster, toast } from "react-hot-toast";
 import { Routes, Route, Navigate } from "react-router-dom";
 import HomePage from "./pages/HomePage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
@@ -10,12 +11,13 @@ import SignUpPage from "./pages/SignUpPage.jsx";
 import { useAuthStore } from "./store/useAuthStore.js";
 import { Loader } from "lucide-react";
 function App() {
-  const { authUser, checkAuth, isCheckingAuth } = useAuthStore();
+  const { authUser, checkAuth, isCheckingAuth, isUpdatingProfile } =
+    useAuthStore();
 
   useEffect(() => {
     toast.success("App loaded successfully!");
     checkAuth();
-  }, [checkAuth]);
+  }, [checkAuth, isUpdatingProfile]);
   if (isCheckingAuth && !authUser)
     return (
       <div className="flex items-center justify-center h-screen">

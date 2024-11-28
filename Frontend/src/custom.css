@@ -1,0 +1,5 @@
+@media screen (max-width:600px){
+    .extra-content{
+        display:none;
+    }   
+}

@@ -1,7 +1,7 @@
 import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import { generateToken } from "../lib/utils.js";
-import cloudinary from "../lib/cloudinary.js";
+import uploadOnCloudinary from "../lib/cloudinary.js";
 export const signup = async (req, res) => {
   const { email, fullname, password, avatar } = req.body;
 
@@ -101,39 +101,55 @@ export const logout = (req, res) => {
   }
 };
 export const updateProfile = async (req, res) => {
+  const { avatar } = req.body;
+  const userId = req.user?._id;
+
+  if (!avatar) {
+    return res.status(400).json({
+      success: false,
+      message: "Profile picture is required",
+    });
+  }
   try {
-    const { avatar } = req.body;
-    const userId = req.user._id;
-    if (!avatar) {
-      return res.status(400).json({
+    const response = await uploadOnCloudinary(avatar);
+    if (response) {
+      console.log("File uploaded to Cloudinary:", response.url);
+      const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        { avatar: response.secure_url },
+        { new: true } // Return the updated document
+      );
+
+      if (!updatedUser) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found",
+        });
+      }
+
+      // Send success response
+      return res.status(200).json({
+        success: true,
+        message: "Profile updated successfully",
+        data: updatedUser,
+      });
+    } else {
+      return res.status(500).json({
         success: false,
-        message: "Profile Pic is required",
+        message: "Failed to upload image to Cloudinary.",
       });
     }
-
-    const uploadResponse = await cloudinary.uploader.upload(avatar);
-
-    const updatedUser = User.findByIdAndUpdate(
-      userId,
-      { avatar: uploadResponse.secure_url },
-      { new: true }
-    );
-
-    res.status(200).json({
-      success: true,
-      updatedUser,
-    });
   } catch (error) {
+    console.error("Error in updateProfile:", error);
     return res.status(500).json({
       success: false,
-      message: `Internal Server Error`,
+      message: "Internal Server Error",
     });
   }
 };
-
 export const check = (req, res) => {
   try {
-    return res.status(200).json({ user: req.user });
+    res.status(200).json(req.user);
   } catch (error) {
     return res.status(500).json({ message: "Internal servesr error" });
   }
